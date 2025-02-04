@@ -13,17 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Upload, Wand2, Clipboard, Download, FileText, Link } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-// import ReactMarkdown from 'react-markdown';
-// import remarkGfm from 'remark-gfm';
-
-// Add type definitions
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      [elemName: string]: any;
-    }
-  }
-}
+// import ReactMarkdown from "react-markdown";
+// import remarkGfm from "remark-gfm";
+// import '../styles/tailored-resume.css';
 
 export default function TailoredResumePage() {
   // Add active tab states
@@ -70,6 +62,10 @@ export default function TailoredResumePage() {
   };
 
   // Add new upload function
+  interface ApiResponse {
+    tailored_resume: string;
+  }
+
   const uploadToBackend = async (resumeData: any, jobData: any) => {
     const formData = new FormData();
     
@@ -97,10 +93,7 @@ export default function TailoredResumePage() {
         method: "POST",
         body: formData,
       });
-  
-      
-  
-      const result = await response.json();
+      const result = await response.json() as ApiResponse;
       return result;
     } catch (error) {
       console.error("Upload failed:", error);
@@ -417,7 +410,27 @@ export default function TailoredResumePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {tailoredResume}
+                {/* <div className="p-6 bg-white rounded-lg shadow-sm">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    className="prose prose-lg max-w-none
+                      prose-headings:font-semibold 
+                      prose-h1:text-2xl prose-h1:text-blue-800
+                      prose-h2:text-xl prose-h2:text-blue-700
+                      prose-h3:text-lg prose-h3:text-blue-600
+                      prose-p:text-gray-700 prose-p:leading-relaxed
+                      prose-strong:text-gray-900 prose-strong:font-bold
+                      prose-ul:list-disc prose-ul:pl-6
+                      prose-ol:list-decimal prose-ol:pl-6
+                      prose-li:text-gray-700
+                      prose-hr:border-gray-300
+                      prose-a:text-blue-600 prose-a:hover:text-blue-800
+                      [&>*:first-child]:mt-0
+                      [&>*:last-child]:mb-0"
+                  > */}
+                    {tailoredResume}
+                  {/* </ReactMarkdown>
+                </div> */}
               </CardContent>
             </Card>
           )}
