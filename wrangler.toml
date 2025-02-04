@@ -8,5 +8,9 @@ mode = "smart"
 
 [[d1_databases]]
 binding = "DATABASE"
-database_name = "cloudflare-saas-stack-db"
-database_id = "294b2613-5f3c-40e5-b32b-bbe664bd9696"
+database_name = "testing"
+database_id = "437e9e1b-f78c-40a6-9747-909f9c71e928"
+migrations_dir = "./drizzle"
+
+[build]
+command = "npm run build"
