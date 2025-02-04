@@ -1,118 +1,428 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { sql } from "drizzle-orm";
-import { auth, signIn, signOut } from "@/server/auth";
-import { db } from "@/server/db";
-import { users } from "@/server/db/schema";
-import { getThemeToggler } from "@/lib/theme/get-theme-button";
+import { Upload, Wand2, Clipboard, Download, FileText, Link } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+// import ReactMarkdown from 'react-markdown';
+// import remarkGfm from 'remark-gfm';
 
-export const runtime = "edge";
+// Add type definitions
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      [elemName: string]: any;
+    }
+  }
+}
 
-export default async function Page() {
-	const session = await auth();
+export default function TailoredResumePage() {
+  // Add active tab states
+  const [activeResumeTab, setActiveResumeTab] = useState("resume-upload");
+  const [activeJobTab, setActiveJobTab] = useState("jd-upload");
 
-	const userCount = await db
-		.select({
-			count: sql<number>`count(*)`.mapWith(Number),
-		})
-		.from(users);
+  // Resume states
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeUrl, setResumeUrl] = useState("");
+  const [resumeText, setResumeText] = useState("");
 
-	const SetThemeButton = getThemeToggler();
+  // Job states
+  const [jobFile, setJobFile] = useState<File | null>(null);
+  const [jobUrl, setJobUrl] = useState("");
+  const [jobText, setJobText] = useState("");
 
-	return (
-		<main className="flex flex-col items-center justify-center min-h-screen">
-			<div className="flex max-w-2xl justify-between w-full">
-				<SetThemeButton />
+  // Result
+  const [tailoredResume, setTailoredResume] = useState("");
 
-				<div className="flex gap-2 items-center justify-center">
-					{" "}
-					<svg
-						viewBox="0 0 256 116"
-						xmlns="http://www.w3.org/2000/svg"
-						width="45px"
-						height="45px"
-						preserveAspectRatio="xMidYMid"
-						role="img"
-						aria-label="Cloudflare logo"
-					>
-						<path
-							fill="#FFF"
-							d="m202.357 49.394-5.311-2.124C172.085 103.434 72.786 69.289 66.81 85.997c-.996 11.286 54.227 2.146 93.706 4.059 12.039.583 18.076 9.671 12.964 24.484l10.069.031c11.615-36.209 48.683-17.73 50.232-29.68-2.545-7.857-42.601 0-31.425-35.497Z"
-						/>
-						<path
-							fill="#F4811F"
-							d="M176.332 108.348c1.593-5.31 1.062-10.622-1.593-13.809-2.656-3.187-6.374-5.31-11.154-5.842L71.17 87.634c-.531 0-1.062-.53-1.593-.53-.531-.532-.531-1.063 0-1.594.531-1.062 1.062-1.594 2.124-1.594l92.946-1.062c11.154-.53 22.839-9.56 27.087-20.182l5.312-13.809c0-.532.531-1.063 0-1.594C191.203 20.182 166.772 0 138.091 0 111.535 0 88.697 16.995 80.73 40.896c-5.311-3.718-11.684-5.843-19.12-5.31-12.747 1.061-22.838 11.683-24.432 24.43-.531 3.187 0 6.374.532 9.56C16.996 70.107 0 87.103 0 108.348c0 2.124 0 3.718.531 5.842 0 1.063 1.062 1.594 1.594 1.594h170.489c1.062 0 2.125-.53 2.125-1.594l1.593-5.842Z"
-						/>
-						<path
-							fill="#FAAD3F"
-							d="M205.544 48.863h-2.656c-.531 0-1.062.53-1.593 1.062l-3.718 12.747c-1.593 5.31-1.062 10.623 1.594 13.809 2.655 3.187 6.373 5.31 11.153 5.843l19.652 1.062c.53 0 1.062.53 1.593.53.53.532.53 1.063 0 1.594-.531 1.063-1.062 1.594-2.125 1.594l-20.182 1.062c-11.154.53-22.838 9.56-27.087 20.182l-1.063 4.78c-.531.532 0 1.594 1.063 1.594h70.108c1.062 0 1.593-.531 1.593-1.593 1.062-4.25 2.124-9.03 2.124-13.81 0-27.618-22.838-50.456-50.456-50.456"
-						/>
-					</svg>
-					<span className="italic">Cloudflare Next Saas Starter</span>
-				</div>
+  // Loading animation
+  const [isTailoring, setIsTailoring] = useState(false);
 
-				<div className="border border-black dark:border-white rounded-2xl p-2 flex items-center">
-					Start by editing apps/web/page.tsx
-				</div>
-			</div>
+  // Get active data based on selected tabs
+  const getActiveData = () => {
+    const resumeData = {
+      type: activeResumeTab,
+      data: activeResumeTab === "resume-upload" 
+        ? resumeFile 
+        : activeResumeTab === "resume-url"
+        ? resumeUrl
+        : resumeText
+    };
 
-			<div className="max-w-2xl text-start w-full mt-16">
-				Welcome to Cloudflare Next Saas Starter. <br /> Built a full stack app
-				using production-ready tools and frameworks, host on Cloudflare
-				instantly.
-				<br />
-				An opinionated, batteries-included framework with{" "}
-				<a
-					className="text-transparent bg-clip-text bg-gradient-to-r from-[#a93d64] to-[#275ba9]"
-					href="https://turbo.build"
-				>
-					Turborepo
-				</a>{" "}
-				and Nextjs. Fully Typesafe. Best practices followed by default.
-				<br /> <br />
-				Here&apos;s what the stack includes:
-				<ul className="list-disc mt-4 prose dark:prose-invert">
-					<li>
-						Authentication with <code>next-auth</code>
-					</li>
-					<li>Database using Cloudflare&apos;s D1 serverless databases</li>
-					<li>Drizzle ORM, already connected to your database and auth ⚡</li>
-					<li>Light/darkmode theming that works with server components (!)</li>
-						<li>Styling using TailwindCSS and ShadcnUI</li>
-						<li>Turborepo with a landing page and shared components</li>
-						<li>Cloudflare wrangler for quick functions on the edge</li>
-						<li>
-							... best part: everything&apos;s already set up for you. Just code!
-						</li>
-				</ul>
-				<div className="mt-4 flex flex-col gap-2">
-					<span>Number of users in database: {userCount[0]!.count}</span>
-				</div>
-				{session?.user?.email ? (
-					<>
-						<div className="mt-4 flex flex-col gap-2">
-							<span>Hello {session.user.name} 👋</span>
-							<span>{session.user.email}</span>
-						</div>
-						<form
-							action={async () => {
-								"use server";
-								await signOut();
-							}}
-						>
-							<Button className="mt-4">Sign out</Button>
-						</form>
-					</>
-				) : (
-					<form
-						action={async () => {
-							"use server";
-							await signIn("google");
-						}}
-					>
-						<Button className="mt-4">Login with Google</Button>
-					</form>
-				)}
-			</div>
-		</main>
-	);
+    const jobData = {
+      type: activeJobTab,
+      data: activeJobTab === "jd-upload"
+        ? jobFile
+        : activeJobTab === "jd-url"
+        ? jobUrl
+        : jobText
+    };
+
+    return { resumeData, jobData };
+  };
+
+  // Add new upload function
+  const uploadToBackend = async (resumeData: any, jobData: any) => {
+    const formData = new FormData();
+    
+    // Handle Resume Data
+    if (resumeData.type === "resume-upload" && resumeData.data) {
+      formData.append("resume_file", resumeData.data);
+    } else if (resumeData.type === "resume-url") {
+      formData.append("resume_url", String(resumeData.data || ""));
+    } else {
+      formData.append("resume_text", String(resumeData.data || ""));
+    }
+  
+    // Handle Job Data
+    if (jobData.type === "jd-upload" && jobData.data) {
+      formData.append("job_file", jobData.data);
+    } else if (jobData.type === "jd-url") {
+      formData.append("job_url", String(jobData.data || ""));
+    } else {
+      formData.append("job_text", String(jobData.data || ""));
+    }
+  
+    try {
+      const response = await fetch("https://textify-ls6r.onrender.com/process", {
+      // const response = await fetch("http://127.0.0.1:5000/process", {
+        method: "POST",
+        body: formData,
+      });
+  
+      
+  
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Upload failed:", error);
+      throw error;
+    }
+  };
+
+  // Update handleSubmit
+  const handleSubmit = async () => {
+    // Reset the previous tailored resume output
+    setTailoredResume("");
+    setIsTailoring(true);
+    try {
+      const { resumeData, jobData } = getActiveData();
+      // console.log('Sending to backend:', { resume: resumeData, job: jobData });
+      
+      const result = await uploadToBackend(resumeData, jobData);
+      setTailoredResume(result.tailored_resume || "Failed to get tailored resume");
+    } catch (error) {
+      console.error("Failed to tailor resume:", error);
+      setTailoredResume("Error: Failed to process resume");
+    } finally {
+      setIsTailoring(false);
+    }
+  };
+
+  // Download
+  const handleDownload = () => {
+    const blob = new Blob([tailoredResume], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Tailored_Resume.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Paste from Clipboard (Resume)
+  const handleResumePasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setResumeText((prev) => prev + text);
+    } catch (error) {
+      console.error("Failed to read from clipboard", error);
+    }
+  };
+
+  // Paste from Clipboard (Job)
+  const handleJobPasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setJobText((prev) => prev + text);
+    } catch (error) {
+      console.error("Failed to read from clipboard", error);
+    }
+  };
+
+  return (
+    <main className="relative min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 p-6">
+      <div className="mx-auto max-w-5xl space-y-8">
+        {/* Hero Section */}
+        <section className="text-center space-y-4 animate-fade-in">
+          <h1 className="text-5xl font-extrabold text-blue-800 bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            AI-Powered Resume Tailoring
+          </h1>
+          <p className="text-gray-700 max-w-2xl mx-auto text-lg">
+            Upload or paste your resume and job description to create a tailored
+            version that maximizes your chances of landing your dream job.
+          </p>
+        </section>
+
+        {/* Side-by-Side Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Resume Input */}
+          <Card className="hover:shadow-lg transition-shadow duration-300 animate-slide-in-left">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <FileText className="h-6 w-6 text-blue-600" />
+                Resume Input
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="mt-4">
+              <Tabs 
+                defaultValue="resume-upload" 
+                onValueChange={(value) => setActiveResumeTab(value)}
+              >
+                <TabsList className="mb-4">
+                  <TabsTrigger value="resume-upload">Upload</TabsTrigger>
+                  <TabsTrigger value="resume-url">URL</TabsTrigger>
+                  <TabsTrigger value="resume-paste">Paste</TabsTrigger>
+                </TabsList>
+
+                {/* Upload Resume */}
+                <TabsContent value="resume-upload">
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex gap-2 items-center"
+                      asChild
+                    >
+                      <label className="cursor-pointer">
+                        <Upload className="h-4 w-4" />
+                        Upload Resume
+                        <input
+                          type="file"
+                          className="absolute w-0 h-0 opacity-0"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              setResumeFile(e.target.files[0]);
+                              setResumeText("");
+                              setResumeUrl("");
+                            }
+                          }}
+                        />
+                      </label>
+                    </Button>
+                    {resumeFile && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-600">{resumeFile.name}</p>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setResumeFile(null)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Resume URL */}
+                <TabsContent value="resume-url">
+                  <label className="mb-1 text-sm font-semibold text-gray-900 block">
+                    Enter Resume URL
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="http://example.com/resume"
+                    className="text-black"
+                    value={resumeUrl}
+                    onChange={(e) => {
+                      setResumeUrl(e.target.value);
+                      setResumeFile(null);
+                      setResumeText("");
+                    }}
+                  />
+                </TabsContent>
+
+                {/* Paste Resume */}
+                <TabsContent value="resume-paste">
+                  <label className="mb-1 text-sm font-semibold text-gray-900 block">
+                    Paste Your Resume
+                  </label>
+                  <Textarea
+                    placeholder="Paste your resume text here..."
+                    className="text-black mt-1"
+                    value={resumeText}
+                    onChange={(e) => {
+                      setResumeText(e.target.value);
+                      setResumeFile(null);
+                      setResumeUrl("");
+                    }}
+                  />
+                  <div className="flex items-center justify-end mt-2">
+                    <Button
+                      variant="outline"
+                      className="flex gap-2 items-center"
+                      onClick={handleResumePasteFromClipboard}
+                    >
+                      <Clipboard className="h-4 w-4" />
+                      Paste from Clipboard
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          {/* Job Description Input */}
+          <Card className="hover:shadow-lg transition-shadow duration-300 animate-slide-in-right">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <Link className="h-6 w-6 text-blue-600" />
+                Job Description Input
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="mt-4">
+              <Tabs 
+                defaultValue="jd-upload"
+                onValueChange={(value) => setActiveJobTab(value)}
+              >
+                <TabsList className="mb-4">
+                  <TabsTrigger value="jd-upload">Upload</TabsTrigger>
+                  <TabsTrigger value="jd-url">URL</TabsTrigger>
+                  <TabsTrigger value="jd-paste">Paste</TabsTrigger>
+                </TabsList>
+
+                {/* Upload JD */}
+                <TabsContent value="jd-upload">
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex gap-2 items-center"
+                      asChild
+                    >
+                      <label className="cursor-pointer">
+                        <Upload className="h-4 w-4" />
+                        Upload Job Description
+                        <input
+                          type="file"
+                          className="absolute w-0 h-0 opacity-0"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              setJobFile(e.target.files[0]);
+                              setJobText("");
+                              setJobUrl("");
+                            }
+                          }}
+                        />
+                      </label>
+                    </Button>
+                    {jobFile && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-600">{jobFile.name}</p>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setJobFile(null)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* JD URL */}
+                <TabsContent value="jd-url">
+                  <label className="mb-1 text-sm font-semibold text-gray-900 block">
+                    Enter Job URL
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="http://example.com/job-post"
+                    className="text-black"
+                    value={jobUrl}
+                    onChange={(e) => {
+                      setJobUrl(e.target.value);
+                      setJobFile(null);
+                      setJobText("");
+                    }}
+                  />
+                </TabsContent>
+
+                {/* Paste JD */}
+                <TabsContent value="jd-paste">
+                  <label className="mb-1 text-sm font-semibold text-gray-900 block">
+                    Paste Job Description
+                  </label>
+                  <Textarea
+                    placeholder="Paste job description text here..."
+                    className="text-black mt-1"
+                    value={jobText}
+                    onChange={(e) => {
+                      setJobText(e.target.value);
+                      setJobFile(null);
+                      setJobUrl("");
+                    }}
+                  />
+                  <div className="flex items-center justify-end mt-2">
+                    <Button
+                      variant="outline"
+                      className="flex gap-2 items-center"
+                      onClick={handleJobPasteFromClipboard}
+                    >
+                      <Clipboard className="h-4 w-4" />
+                      Paste from Clipboard
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tailor & Output */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-center gap-4">
+            <Button
+              onClick={handleSubmit}
+              className="flex gap-2 items-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              <Wand2 className="h-4 w-4" />
+              Tailor Resume
+            </Button>
+            {isTailoring && (
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 bg-blue-600 rounded-full animate-ping" />
+                <p className="text-gray-700 font-semibold">
+                  Tailoring your resume...
+                </p>
+              </div>
+            )}
+          </div>
+
+          {tailoredResume && (
+            <Card className="mt-8">
+              <CardHeader className="border-b border-gray-200">
+                <CardTitle className="text-xl font-semibold text-gray-800">
+                  Tailored Resume
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {tailoredResume}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </main>
+  );
 }
