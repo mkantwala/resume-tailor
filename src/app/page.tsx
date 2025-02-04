@@ -13,8 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Upload, Wand2, Clipboard, Download, FileText, Link } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-// import ReactMarkdown from "react-markdown";
-// import remarkGfm from "remark-gfm";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 // import '../styles/tailored-resume.css';
 
 export default function TailoredResumePage() {
@@ -410,7 +410,7 @@ export default function TailoredResumePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {/* <div className="p-6 bg-white rounded-lg shadow-sm">
+                <div className="p-6 bg-white rounded-lg shadow-sm">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     className="prose prose-lg max-w-none
@@ -427,10 +427,10 @@ export default function TailoredResumePage() {
                       prose-a:text-blue-600 prose-a:hover:text-blue-800
                       [&>*:first-child]:mt-0
                       [&>*:last-child]:mb-0"
-                  > */}
+                  >
                     {tailoredResume}
-                  {/* </ReactMarkdown>
-                </div> */}
+                  </ReactMarkdown>
+                </div>
               </CardContent>
             </Card>
           )}
